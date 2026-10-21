@@ -1,0 +1,65 @@
+# .gitignore
+#
+# Empêche secrets, données collectées et modèles entraînés de finir dans
+# l'historique Git. Seul .env.example (sans valeur réelle) est versionné.
+
+# --- Secrets --------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+
+# --- Données et modèles (plusieurs centaines de Mo, régénérables) ---------
+# Tout le contenu de data/ est ignoré, seuls les dossiers vides de
+# l'arborescence de base (.gitkeep) sont conservés.
+data/**
+!data/*/
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/historical/.gitkeep
+!data/features/.gitkeep
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+*.parquet
+*.joblib
+*.pkl
+registry.jsonl
+logs/
+*.log
+*.csv
+
+# --- Python ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+dist/
+.ipynb_checkpoints/
+
+# --- Environnements virtuels ----------------------------------------------
+.venv/
+venv/
+env/
+
+# --- Éditeurs / OS --------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Exports temporaires --------------------------------------------------
+crypto_radar_pi_staging/
+staging_transfer/

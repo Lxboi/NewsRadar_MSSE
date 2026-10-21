@@ -1,0 +1,98 @@
+# =============================================================================
+# settings.yaml — global system settings
+# Crypto News Radar & Microstructure Scalping Engine
+# =============================================================================
+# This is the only place that should ever contain non-secret operational
+# settings. Secrets (API keys, tokens) live exclusively in .env — never here.
+
+system:
+  name: "crypto_radar"
+  timezone: "UTC"          # all internal timestamps are UTC; convert at display time only
+  environment: "windows"   # windows | raspberry_pi
+  python_version: "3.12.10"
+
+# Trading mode gate — see section 65 of the master prompt.
+# RESEARCH is the only mode active until explicitly promoted by the operator.
+trading_mode:
+  default: "RESEARCH"      # RESEARCH | PAPER | LIVE
+  # PAPER requires PAPER_TRADING=true in .env
+  # LIVE requires LIVE_TRADING=true in .env AND an interactive confirmation at startup
+
+logging:
+  level: "INFO"             # DEBUG | INFO | WARNING | ERROR
+  backend: "loguru"
+  log_dir: "data/logs"
+  rotation: "1 day"
+  retention: "30 days"
+  redact_secrets: true       # never write API keys/tokens to logs, ever
+
+storage:
+  sqlite_path: "data/processed/crypto_radar.db"
+  parquet_root: "data/"
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  historical_dir: "data/historical"
+  features_dir: "data/features"
+  sqlite_snapshot_interval_s: 5   # Phase 4: how often per-asset metrics are committed to SQLite
+  parquet_flush_rows: 500         # Phase 4: rows buffered per (dataset, asset, date) before a part file is written
+
+asyncio:
+  queue_maxsize: 10000          # backpressure guard per section 10
+  heartbeat_interval_s: 5
+  stale_data_timeout_s: 15      # section 62, system-level: no usable market data for this
+                                 # long -> STOP TRADING (wired up by the health monitor, Phase 12)
+  ws_heartbeat_timeout_s: 30    # socket-level: force a reconnect if a WS connection itself
+                                 # goes idle this long, even without an error (Phase 2).
+                                 # Must stay above the collector's own ping interval (20s).
+  reconnect:
+    base_delay_s: 1
+    max_delay_s: 60
+    jitter: true
+
+monitoring:
+  check_interval_s: 10
+  watch:
+    - websocket_hyperliquid
+    - websocket_kraken
+    - news_feed
+    - telegram
+    - database
+    - clock_sync
+  cpu_warn_pct: 85
+  ram_warn_pct: 85
+  disk_warn_pct: 90
+
+# Phase 15 (section 65, PAPER activation): live/trading_loop.py's
+# PaperTradingEngine is only ever constructed and ticked when BOTH gates
+# are open -- trading_mode.default == "PAPER" here AND PAPER_TRADING=true
+# in .env (mirroring the existing RESEARCH/PAPER/LIVE convention above:
+# a single YAML flag is never enough on its own to start moving simulated
+# money, matching the same two-gate discipline docs/16-19_*.md already
+# established for wiring this in "later"). With either gate closed
+# (the default), main.py's behavior is byte-for-byte unchanged from
+# before this phase existed.
+paper_trading:
+  tick_interval_s: 1.0        # how often PaperTradingEngine.tick() is called
+  horizon_s: 30                # which promoted model to load per asset -- must match a
+  threshold_bps: 10            #   (horizon_s, threshold_bps) key someone has actually promoted
+  initial_cash: 10000.0        # PaperExecutor's starting simulated balance
+  account_equity: 10000.0      # RiskManager's starting account_equity (kept equal to initial_cash by convention)
+  performance_snapshot_interval_s: 300   # how often an all_time PerformanceSnapshot row is persisted to SQLite
+  # An asset in assets.yaml with no promoted model for (horizon_s,
+  # threshold_bps) is skipped, not fatal -- see
+  # live/trading_loop.py: PaperTradingEngine.skipped_assets. There is
+  # deliberately no "block startup until every enabled asset has a
+  # model" policy: partial paper-trading coverage (e.g. BTC live,
+  # ETH/SOL not yet trained) is a normal, expected state while
+  # methodology/20_paper_trading_methodology.md's testing process is
+  # still in progress for some assets.
+
+raspberry_pi:
+  low_memory_mode: false      # flip to true when deployed on the Pi
+  systemd_service_name: "crypto-radar.service"
+  watchdog_enabled: true
+  log_rotation_max_mb: 50
+
+# Note: assets, per-source news config, strategy/model thresholds and
+# Telegram behavior live in their own files (assets.yaml, sources.yaml,
+# strategy.yaml, telegram.yaml) so each concern can change independently.

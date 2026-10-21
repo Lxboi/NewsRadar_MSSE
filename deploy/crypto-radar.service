@@ -1,0 +1,41 @@
+# systemd unit for running the crypto_radar data collector (RESEARCH
+# mode) unattended on a Raspberry Pi across reboots/crashes.
+# See docs/22_raspberry_pi_data_collection.md for the full guide.
+#
+# Replace <user> below with the Pi account that owns the project,
+# installed at /home/<user>/crypto_radar. Adjust User=,
+# WorkingDirectory=, and the ExecStart= interpreter path accordingly.
+#
+# Install:
+#   sudo cp deploy/crypto-radar.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now crypto-radar
+#
+# Check on it:
+#   sudo systemctl status crypto-radar
+#   sudo journalctl -u crypto-radar -f
+#
+# Stop cleanly (flushes pending Parquet buffers, same as Ctrl+C):
+#   sudo systemctl stop crypto-radar
+
+[Unit]
+Description=Crypto News Radar - data collection (RESEARCH mode)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=<user>
+WorkingDirectory=/home/<user>/crypto_radar
+ExecStart=/home/<user>/crypto_radar/.venv/bin/python -m src.main
+Restart=on-failure
+RestartSec=10
+# main.py already handles SIGTERM cleanly (flushes Parquet, stops
+# collectors) -- give it a few seconds before systemd escalates to
+# SIGKILL on stop/restart.
+TimeoutStopSec=15
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

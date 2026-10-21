@@ -1,0 +1,95 @@
+# =============================================================================
+# strategy.yaml — horizons, thresholds, strategies under test
+# Nothing here is a claim of profitability — these are research starting
+# points to be optimized/validated out-of-sample (sections 7, 30, 38, 46).
+# =============================================================================
+
+horizons_s: [10, 30, 60, 180, 300]
+# 100/150/200/250/300 added Phase 15 addendum 5 (2026-08-26) -- with the
+# real Kraken Pro taker fee (see costs: below), round_trip_cost_bps is
+# ~166, so nothing at or below 50bps can ever pass min_expected_value
+# regardless of model confidence. Kept the old <=50bps values too for
+# direct before/after comparison on the same features_v1 table.
+move_thresholds_bps: [5, 10, 15, 25, 50, 100, 150, 200, 250, 300]
+
+entry_filter:
+  # Section 38 — starting point only, must be re-optimized via walk-forward.
+  probability_up_min: 0.62
+  min_expected_value: 0.0        # EV must be strictly positive after costs (section 37) --
+                                  # with real Kraken fees this mathematically requires
+                                  # threshold_bps > round_trip_cost_bps (~166, see costs: below)
+  max_spread_bps: 5
+  max_slippage_bps: 5
+  max_data_age_s: 3
+  allowed_regimes: ["LOW_VOL", "NORMAL_VOL"]   # HIGH_VOL / EXTREME_VOL excluded by default
+
+exit_candidates:
+  # Section 39 — all tested, none assumed best.
+  - "fixed_tp"
+  - "fixed_sl"
+  - "volatility_based_sl"
+  - "probability_reversal"
+  - "order_flow_reversal"
+  - "liquidity_reversal"
+  - "time_stop"
+time_stop_candidates_s: [10, 30, 60, 180, 300]
+
+costs:
+  # Real Kraken Pro spot fees (API trading), Tier 1 (< $50k / 30-day
+  # volume — the honest default until real trading volume is known):
+  # maker 0.40%, taker 0.80%. Source: kraken.com/features/fee-schedule,
+  # checked 2026-08-26. This replaces the old 5bps/2bps placeholders,
+  # which were ~16x too low on the taker side — see the zero-trades
+  # investigation this same date (Phase 15 addendum 5): with
+  # threshold_bps=10 and the old placeholders, round_trip_cost_bps=16
+  # already made every EV filter unsatisfiable in theory, but the real
+  # cost is round_trip_cost_bps=160 for taker orders at this tier,
+  # dramatically worse. `assumed_slippage_bps` is still a rough guess,
+  # not measured from this project's own collected L2 book data yet —
+  # worth revisiting once there's a real fill-cost measurement.
+  taker_fee_bps: 80
+  maker_fee_bps: 40
+  assumed_slippage_bps: 3
+  funding_rate_note: "Pull live funding rate; do not assume 0."
+
+strategies_under_test:
+  # Sections 34-36, 67 — research hypotheses, not confirmed edges.
+  - id: "order_flow_momentum_liquidity_confirmation"
+    enabled: true
+  - id: "liquidity_absorption_reversal"
+    enabled: true
+  - id: "news_shock_order_flow_confirmation"
+    enabled: true
+  # Baselines every strategy above must beat (section 31):
+  - id: "baseline_momentum_only"
+    enabled: true
+    is_baseline: true
+  - id: "baseline_obi_only"
+    enabled: true
+    is_baseline: true
+  - id: "baseline_trade_imbalance_only"
+    enabled: true
+    is_baseline: true
+  - id: "baseline_news_score_only"
+    enabled: true
+    is_baseline: true
+  - id: "baseline_news_plus_order_flow"
+    enabled: true
+    is_baseline: true
+
+risk:
+  # Section 66 — hard absolute limits. Breach => NO NEW TRADES.
+  max_risk_per_trade_pct: 0.1
+  max_daily_loss_pct: 1.0
+  max_position_size_pct_equity: 5.0
+  max_consecutive_losses: 4
+  max_open_positions: 1
+  max_slippage_bps: 8
+  max_spread_bps: 8
+  max_latency_ms: 500
+
+signal_engine:
+  # Section 33 classification thresholds — starting points, to be tuned.
+  quality_A_min_probability: 0.68
+  quality_B_min_probability: 0.58
+  quality_C_min_probability: 0.52

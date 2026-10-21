@@ -1,0 +1,79 @@
+# =============================================================================
+# telegram.yaml — notification philosophy: synthesis interface, not a feed.
+# Sections 47-55. Default mode is SNIPER — maximum internal analysis,
+# minimum external notifications.
+# =============================================================================
+
+mode: "SNIPER"    # AGGRESSIVE | NORMAL | SNIPER  (SNIPER is the intended daily-driver)
+
+modes:
+  AGGRESSIVE:
+    notify_on_quality: ["A", "B"]
+  NORMAL:
+    notify_on_quality: ["A"]
+    notify_on: ["important_event", "position_opened", "position_closed", "anomaly"]
+  SNIPER:
+    notify_on_quality: ["A"]
+    require_exceptional_edge: true   # additional filter beyond plain quality=A
+
+signal_filter:
+  # Section 49 — ALL must pass, or NO NOTIFICATION.
+  min_probability: 0.68
+  min_expected_value: 0.0
+  required_signal_quality: "A"
+  max_spread_bps: 5
+  max_slippage_bps: 5
+  max_data_age_s: 3
+  block_on_risk_lock: true
+  block_on_recent_duplicate: true
+
+anti_spam:
+  # Section 50
+  cooldown_s_per_asset: 300
+  cooldown_override_on_major_event: true
+  dedupe_probability_delta_pct: 3     # LONG 71/72/73% collapse into one alert
+  escalate_on:
+    - "signal_quality_change"
+    - "significant_probability_change"
+    - "direction_change"
+    - "new_major_news"
+    - "position_opened"
+    - "position_closed"
+    - "risk_event"
+
+alert_types:
+  # Section 51 — the only categories Telegram is allowed to send.
+  - "HIGH_CONVICTION_SIGNAL"
+  - "POSITION_OPENED"       # only if automated trading is enabled
+  - "POSITION_CLOSED"
+  - "RISK_ALERT"
+  - "DAILY_REPORT"
+
+never_notify:
+  # Section 52 — explicitly excluded from Telegram, always available in logs/dashboard.
+  - "every_news_item"
+  - "every_sentiment_change"
+  - "every_obi_change"
+  - "every_micro_move"
+  - "every_C_signal"
+  - "every_B_signal_in_sniper_mode"
+  - "every_small_probability_change"
+
+hourly_summary:
+  enabled: false        # section 53: optional, NOT required in SNIPER mode
+  send_at_minute: 0
+
+daily_report:
+  enabled: true          # section 54: always on, once a day
+  send_time_utc: "21:00" # ~23:00 Europe/Paris in summer — adjust per DST if needed
+
+commands:
+  # Section 55
+  - "/status"
+  - "/performance"
+  - "/positions"
+  - "/signals"
+  - "/today"
+  - "/risk"
+  - "/mode"
+  - "/stop"     # disables new entries; independent local kill switch also required

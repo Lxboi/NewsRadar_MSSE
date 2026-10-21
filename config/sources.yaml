@@ -1,0 +1,197 @@
+# =============================================================================
+# sources.yaml — news / search radar configuration
+# Sections 20-22: keywords must be configurable here, never hardcoded.
+# Respect official APIs, rate limits, ToS, robots.txt — no anti-bot bypass.
+# =============================================================================
+
+keywords:
+  - "Bitcoin"
+  - "BTC"
+  - "Ethereum"
+  - "ETH"
+  - "Solana"
+  - "SOL"
+  - "ETF"
+  - "SEC"
+  - "Fed"
+  - "FOMC"
+  - "CPI"
+  - "inflation"
+  - "interest rates"
+  - "liquidation"
+  - "hack"
+  - "exploit"
+  - "exchange"
+  - "Kraken"
+  - "Coinbase"
+  - "Binance"
+  - "BlackRock"
+  - "regulation"
+  - "stablecoin"
+  - "USDC"
+
+rss_feeds:
+  # Phase 5: RSS is the simplest, most reliable, lowest-ToS-risk source
+  # (section 72). Expanded 2026-08-18 per the user's request to maximize
+  # source coverage within Pi 5 4GB hardware limits — research concluded
+  # that feed *count* is not the real constraint on a Pi 5 4GB (a poll is a
+  # transient fetch/parse/discard, no persistent connection or heavy state);
+  # the actual risks are concurrent-connection bursts and heavy NLP/ML
+  # dependencies, both addressed via `rss_polling` below and the lexicon-
+  # based (not transformer-based) sentiment scorer in src/news/sentiment.py.
+  # 16 crypto-media feeds + 8 official regulatory/macro feeds = 24 total.
+
+  # --- Crypto media (16) ---
+  - name: "CoinDesk"
+    url: "https://www.coindesk.com/arc/outboundfeeds/rss/"
+    category: "crypto_media"
+    credibility: 0.7
+  - name: "CoinTelegraph"
+    url: "https://cointelegraph.com/rss"
+    category: "crypto_media"
+    credibility: 0.6
+  - name: "The Block"
+    url: "https://www.theblock.co/rss.xml"
+    category: "crypto_media"
+    credibility: 0.75
+  - name: "Decrypt"
+    url: "https://decrypt.co/feed"
+    category: "crypto_media"
+    credibility: 0.7
+  - name: "CryptoSlate"
+    url: "https://cryptoslate.com/feed/"
+    category: "crypto_media"
+    credibility: 0.65
+  - name: "The Defiant"
+    url: "https://thedefiant.io/api/feed"
+    category: "crypto_media"
+    credibility: 0.65
+  - name: "NewsBTC"
+    url: "https://www.newsbtc.com/feed/"
+    category: "crypto_media"
+    credibility: 0.55
+  - name: "Bitcoin.com News"
+    url: "https://news.bitcoin.com/feed/"
+    category: "crypto_media"
+    credibility: 0.6
+  - name: "BeInCrypto"
+    url: "https://beincrypto.com/feed/"
+    category: "crypto_media"
+    credibility: 0.55
+  - name: "AMBCrypto"
+    url: "https://ambcrypto.com/feed/"
+    category: "crypto_media"
+    credibility: 0.55
+  - name: "Cryptonews.com"
+    url: "https://cryptonews.com/news/feed/"
+    category: "crypto_media"
+    credibility: 0.55
+  - name: "CoinPedia"
+    url: "https://coinpedia.org/feed/"
+    category: "crypto_media"
+    credibility: 0.5
+  - name: "DailyCoin"
+    url: "https://dailycoin.com/feed/"
+    category: "crypto_media"
+    credibility: 0.5
+  - name: "99Bitcoins"
+    url: "https://99bitcoins.com/feed/"
+    category: "crypto_media"
+    credibility: 0.5
+  - name: "Crypto.News"
+    url: "https://crypto.news/feed/"
+    category: "crypto_media"
+    credibility: 0.55
+  - name: "U.Today"
+    url: "https://u.today/rss"
+    category: "crypto_media"
+    credibility: 0.5
+
+  # --- Official regulatory / macro (8) — section 21/24 MACRO & REGULATION
+  # categories; credibility 1.0 since these are primary-source government
+  # feeds, not reporting about a primary source. ---
+  - name: "SEC Press Releases"
+    url: "https://www.sec.gov/news/pressreleases.rss"
+    category: "regulatory"
+    credibility: 1.0
+  - name: "SEC Litigation Releases"
+    url: "https://www.sec.gov/enforcement-litigation/litigation-releases/rss"
+    category: "regulatory"
+    credibility: 1.0
+  - name: "SEC Administrative Proceedings"
+    url: "https://www.sec.gov/enforcement-litigation/administrative-proceedings/rss"
+    category: "regulatory"
+    credibility: 1.0
+  - name: "SEC Trading Suspensions"
+    url: "https://www.sec.gov/enforcement-litigation/trading-suspensions/rss"
+    category: "regulatory"
+    credibility: 1.0
+  - name: "Federal Reserve Press Releases"
+    url: "https://www.federalreserve.gov/feeds/press_all.xml"
+    category: "regulatory"
+    credibility: 1.0
+  - name: "Federal Reserve Monetary Policy"
+    url: "https://www.federalreserve.gov/feeds/press_monetary.xml"
+    category: "regulatory"
+    credibility: 1.0
+  - name: "Federal Reserve Banking Regulation"
+    url: "https://www.federalreserve.gov/feeds/press_bcreg.xml"
+    category: "regulatory"
+    credibility: 1.0
+  - name: "Federal Reserve Enforcement Actions"
+    url: "https://www.federalreserve.gov/feeds/press_enforcement.xml"
+    category: "regulatory"
+    credibility: 1.0
+
+rss_polling:
+  # Hardware-conscious defaults for a Raspberry Pi 5 4GB (section 63): the
+  # constraint isn't feed count, it's avoiding a thundering herd of
+  # simultaneous connections and keeping per-feed memory flat over a long
+  # run. Each feed polls independently (fault isolation, section 10);
+  # max_concurrent_fetches caps how many of the 24 are ever in-flight at once.
+  poll_interval_s: 60           # per feed; actual interval is +/- jitter_s
+  jitter_s: 15                  # staggers both the first poll and every repeat
+  max_concurrent_fetches: 5     # hard cap on simultaneous HTTP GETs across all feeds
+  http_timeout_s: 10
+  user_agent: "crypto_radar-research-bot/0.5 (personal research project; RESEARCH mode only)"
+
+google_news:
+  enabled: false            # 2026-08-18 decision: kept disabled — the unofficial
+  # news.google.com/rss/search endpoint's robots.txt disallows automated
+  # fetching, which conflicts with this file's own rate_limits below
+  # (respect_robots_txt / never_bypass_anti_bot). Revisit only if an
+  # official/compliant alternative is found.
+  language: "en"
+  region: "US"
+  poll_interval_s: 30
+
+social:
+  enabled: false            # off by default per section 20 — API + ToS gated.
+  # 2026-08-18 decision: deferred, not implemented this phase.
+  #   - X/Twitter: no free API tier exists (paid, ~$35-50+/month minimum).
+  #   - Reddit: free tier exists but now requires an approval application
+  #     ("Responsible Builder Policy", since June 2026) before API keys are
+  #     issued — an external process, not just a config change.
+  # Revisit once the user has made those calls independently of hardware.
+  twitter:
+    enabled: false
+    accounts: []
+  reddit:
+    enabled: false
+    subreddits: []
+
+rate_limits:
+  default_requests_per_minute: 30
+  respect_robots_txt: true
+  never_bypass_anti_bot: true   # hard rule, section 20 — not a suggestion
+
+deduplication:
+  # Section 22
+  title_similarity_threshold: 0.85
+  time_window_s: 900             # articles within 15 min sharing a source are candidates
+  use_semantic_similarity: false  # flip on once an embedding model is chosen in Phase 5
+
+decay:
+  # Section 25 — half-lives to test empirically, not assumed correct.
+  half_life_candidates_s: [30, 60, 300, 900, 3600]
+  default_half_life_s: 300

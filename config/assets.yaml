@@ -1,0 +1,46 @@
+# =============================================================================
+# assets.yaml — tradable / monitored universe
+# Section 6: start with BTC, ETH, SOL. Architecture must make adding
+# XRP, DOGE, BNB, etc. trivial later — but we do NOT start with 50 assets.
+# =============================================================================
+
+assets:
+  - symbol: "BTC"
+    enabled: true
+    hyperliquid:
+      coin: "BTC"
+    kraken:
+      spot_pair: "XBT/USD"
+      futures_symbol: "PF_XBTUSD"
+    min_tick: 0.1
+    min_notional_usd: 10
+
+  - symbol: "ETH"
+    enabled: true
+    hyperliquid:
+      coin: "ETH"
+    kraken:
+      spot_pair: "ETH/USD"
+      futures_symbol: "PF_ETHUSD"
+    min_tick: 0.01
+    min_notional_usd: 10
+
+  - symbol: "SOL"
+    enabled: true
+    hyperliquid:
+      coin: "SOL"
+    kraken:
+      spot_pair: "SOL/USD"
+      futures_symbol: "PF_SOLUSD"
+    min_tick: 0.001
+    min_notional_usd: 10
+
+# Reserved for later activation (section 6) — disabled by default.
+# Adding an asset is a config change only; no code change should be required.
+future_universe:
+  - symbol: "XRP"
+    enabled: false
+  - symbol: "DOGE"
+    enabled: false
+  - symbol: "BNB"
+    enabled: false
