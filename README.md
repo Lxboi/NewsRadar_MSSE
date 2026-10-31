@@ -209,15 +209,16 @@ avec `--round-trip-cost-bps`). La méthode complète est décrite dans
 
 | Document | Contenu |
 |---|---|
-| [`ROADMAP.md`](ROADMAP.md) | Journal complet des 15 phases et de chaque expérience, avec ses résultats |
+| [`ROADMAP.md`](ROADMAP.md) | Les 17 phases et le journal de chaque expérience, avec ses résultats |
+| [`docs/01`](docs/01_architecture.md) · [`02`](docs/02_asyncio_architecture.md) | Architecture générale et asyncio |
 | [`docs/03`](docs/03_hyperliquid_ws_architecture.md) · [`04`](docs/04_orderbook_engine.md) | Collecte Hyperliquid, moteur de carnet d'ordres |
+| [`docs/05`](docs/05_parquet_schema.md) · [`05`](docs/05_sqlite_schema.md) · [`06`](docs/06_features_v1.md) | Stockage Parquet et SQLite, table de features |
+| [`docs/07`](docs/07_collection_strategy.md) · [`08`](docs/08_backtesting_strategy.md) · [`09`](docs/09_tests_plan.md) | Stratégie de collecte, de validation, et tests |
 | [`docs/10`](docs/10_news_radar.md) · [`11`](docs/11_news_market_sync.md) | Radar d'actualités, synchronisation des horloges |
 | [`docs/12`](docs/12_feature_engine.md) · [`13`](docs/13_baseline_strategies.md) · [`14`](docs/14_statistical_models.md) | Features, stratégies de référence, modèles |
 | [`docs/15`](docs/15_backtesting.md) · [`16`](docs/16_signals_and_strategy.md) · [`17`](docs/17_risk_and_telegram.md) | Backtest, signaux, risque et Telegram |
 | [`docs/18`](docs/18_paper_execution.md) · [`19`](docs/19_kraken_executor.md) · [`20`](docs/20_live_paper_trading.md) | Exécution simulée, client Kraken, paper trading en direct |
-| [`docs/22`](docs/22_raspberry_pi_data_collection.md) | Collecte sur Raspberry Pi |
-
-La documentation technique détaillée est en anglais.
+| [`docs/21`](docs/21_paper_trading_methodology.md) · [`22`](docs/22_raspberry_pi_data_collection.md) | Méthode de test en paper trading, collecte sur Raspberry Pi |
 
 ## Organisation du code
 

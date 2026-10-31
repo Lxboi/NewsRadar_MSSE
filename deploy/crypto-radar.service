@@ -1,21 +1,20 @@
-# systemd unit for running the crypto_radar data collector (RESEARCH
-# mode) unattended on a Raspberry Pi across reboots/crashes.
-# See docs/22_raspberry_pi_data_collection.md for the full guide.
+# Service systemd : collecte de données en continu (mode RESEARCH) sur
+# un Raspberry Pi, avec redémarrage automatique.
+# Guide complet : docs/22_raspberry_pi_data_collection.md
 #
-# Replace <user> below with the Pi account that owns the project,
-# installed at /home/<user>/crypto_radar. Adjust User=,
-# WorkingDirectory=, and the ExecStart= interpreter path accordingly.
+# Remplacer <user> par le compte du Pi. Le projet doit être dans
+# /home/<user>/crypto_radar.
 #
-# Install:
+# Installer :
 #   sudo cp deploy/crypto-radar.service /etc/systemd/system/
 #   sudo systemctl daemon-reload
 #   sudo systemctl enable --now crypto-radar
 #
-# Check on it:
+# Vérifier :
 #   sudo systemctl status crypto-radar
 #   sudo journalctl -u crypto-radar -f
 #
-# Stop cleanly (flushes pending Parquet buffers, same as Ctrl+C):
+# Arrêter proprement (vide les tampons Parquet, comme Ctrl+C) :
 #   sudo systemctl stop crypto-radar
 
 [Unit]
@@ -30,9 +29,7 @@ WorkingDirectory=/home/<user>/crypto_radar
 ExecStart=/home/<user>/crypto_radar/.venv/bin/python -m src.main
 Restart=on-failure
 RestartSec=10
-# main.py already handles SIGTERM cleanly (flushes Parquet, stops
-# collectors) -- give it a few seconds before systemd escalates to
-# SIGKILL on stop/restart.
+# main.py gère SIGTERM proprement : on lui laisse 15 s avant SIGKILL.
 TimeoutStopSec=15
 StandardOutput=journal
 StandardError=journal
